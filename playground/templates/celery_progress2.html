@@ -1,0 +1,61 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Progress</title>
+  <script src="{% static 'js/axios.min.js' %}"></script>
+  <style>
+    #progress-bar {
+      margin-top: 1em;
+    }
+  </style>
+</head>
+<body>
+<div id="progress-wrapper">
+  <button id="progress-bar-trigger">Run</button>
+  <div id="progress-bar" style="background-color: blue; width: 0%;">&nbsp;</div>
+  <div id="progress-bar-message">Waiting for progress to start...</div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const bar = document.getElementById("progress-bar");
+    const barMessage = document.getElementById("progress-bar-message");
+
+    function updateProgress(taskID) {
+      axios.get("{% url 'celery_task_status' %}?task_id=" + taskID).then(res => {
+        console.log("updateProgress:", res);
+        if (res.data.state === "PROGRESS") {
+          const current = res.data.details.current;
+          const total = res.data.details.total;
+          const percent = (current / total) * 100;
+
+          bar.style.width = percent + "%";
+          barMessage.innerHTML = current + ' of ' + total + ' processed.';
+          setTimeout(updateProgress, 500, taskID)
+        } else if (res.data.state === "PENDING") {
+          setTimeout(updateProgress, 500, taskID)
+        } else if (res.data.state === "SUCCESS") {
+          bar.style.width = "100%";
+          barMessage.innerHTML = "COMPLETED !!!";
+        } else {
+          console.error("Unknown state!!! : ", res.data.state)
+        }
+      });
+    }
+
+    var trigger = document.getElementById('progress-bar-trigger');
+    trigger.addEventListener('click', function (e) {
+      axios.get("{% url 'celery_task_trigger' %}").then((res) => {
+        console.log("onclick: ", res);
+        updateProgress(res.data.task_id)
+      }).catch(err => {
+        console.error(err)
+      });
+    });
+  });
+</script>
+</body>
+</html>
