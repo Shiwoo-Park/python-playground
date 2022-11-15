@@ -1,0 +1,1 @@
+celery -A test_worker worker -l info

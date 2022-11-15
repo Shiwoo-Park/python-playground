@@ -27,6 +27,7 @@
     function updateProgress(taskID) {
       axios.get("{% url 'celery_task_status' %}?task_id=" + taskID).then(res => {
         console.log("updateProgress:", res);
+
         if (res.data.state === "PROGRESS") {
           const current = res.data.details.current;
           const total = res.data.details.total;
@@ -35,11 +36,14 @@
           bar.style.width = percent + "%";
           barMessage.innerHTML = current + ' of ' + total + ' processed.';
           setTimeout(updateProgress, 500, taskID)
+
         } else if (res.data.state === "PENDING") {
           setTimeout(updateProgress, 500, taskID)
+
         } else if (res.data.state === "SUCCESS") {
           bar.style.width = "100%";
           barMessage.innerHTML = "COMPLETED !!!";
+
         } else {
           console.error("Unknown state!!! : ", res.data.state)
         }

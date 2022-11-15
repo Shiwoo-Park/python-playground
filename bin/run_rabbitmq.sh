@@ -1,0 +1,1 @@
+docker run -d --hostname myrabbit --name myrabbit -p 5672:5672 rabbitmq:3

@@ -13,12 +13,14 @@ class CeleryProgressView(TemplateView):
 
 class CeleryTriggerTaskAPIView(APIView):
     def get(self, request, *args, **kwargs):
+        """sleep 이라는 celery task 를 trigger"""
         result = sleep.delay(30)
         return Response(data={"task_id": result.id, "message": "celery task started!!!"})
 
 
 class CeleryTaskStatusAPIView(APIView):
     def get(self, request, *args, **kwargs):
+        """입력받은 celery task 의 상태정보를 응답해준다."""
         task_id = request.query_params["task_id"]
         result = AsyncResult(task_id)
         response_data = {
